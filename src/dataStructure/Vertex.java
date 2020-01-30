@@ -1,9 +1,11 @@
 package dataStructure;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import dataStructure.node_data;
 import utils.Point3D;
 
-public class Vertex implements node_data{
+public class Vertex<T> implements node_data, Comparable<T>{
 	
 	private int _key;
 	private Point3D _location;
@@ -78,6 +80,15 @@ public class Vertex implements node_data{
 	@Override
 	public void setTag(int t) {
 		this._tag = t;
+	}
+	
+	@Override
+	public int compareTo(T node) {
+		if(node instanceof node_data) {
+			return ((node_data) node).getKey() - this.getKey();
+		} else {
+			throw new RuntimeException();
+		}
 	}
 
 }

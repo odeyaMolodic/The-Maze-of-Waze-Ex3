@@ -1,25 +1,17 @@
 package elements;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-//import com.sun.jdi.Location;
-
-import Server.Game_Server;
 import Server.game_service;
-import dataStructure.DGraph;
-import gameClient.*;
 import dataStructure.graph;
+import gameClient.MyGameGUI;
 import utils.Point3D;
 
-public class fruits  {
+public class fruits implements fruit_data  {
 
 	game_service game;
 	graph praph;
@@ -46,35 +38,6 @@ public class fruits  {
 
 	}
 
-     /**
-     *  Constructor init fruit attributes from a JSON string input. Separates the different values
-     * from jsonString and sets them to their respective values. Pos The function separates the x and y values and
-     * creates the 3D point for pos.
-     * @ param jsonString
-     */
-	public void init(String jsonString) {
-
-		try {
-			JSONObject fruit = new JSONObject(jsonString);
-			JSONObject ttt = fruit.getJSONObject("Fruit");
-			double value = ttt.getDouble("value");
-			int type = ttt.getInt("type");
-			String position = ttt.getString("pos");
-			String[] arrOfStr = position.split(",", 0);
-			double x = Double.parseDouble(arrOfStr[0]);
-			double y = Double.parseDouble(arrOfStr[1]);
-			Point3D pos = new Point3D(x, y);
-			this.value = value;
-			this.pos = pos;
-			this.type = type;
-
-		}
-
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 
 	
 	public int getID() {
@@ -84,7 +47,7 @@ public class fruits  {
 	public void setID(int id) {
 		this.id = id;
 	}
-	
+	@Override
 	public Point3D getPos() {
 		return this.pos;
 	}
@@ -92,7 +55,7 @@ public class fruits  {
 	public void setPos(Point3D pos) {
 		this.pos = pos;
 	}
-	
+	@Override
 	public int getType() {
 		return this.type;
 	}
@@ -100,7 +63,7 @@ public class fruits  {
 	public void setType(int type) {
 		this.type = type;
 	}
-	
+	@Override
 	public double getValue() {
 		return this.value;
 	}
@@ -117,6 +80,7 @@ public class fruits  {
      *  Constructor init fruit attributes from a JSON string input.
      * @ param jsonSTR
      */
+	
 	public fruits(String jsonSTR) {
 
         this();
@@ -148,6 +112,7 @@ public class fruits  {
      * @ param game - represent game
      * @ param p - represent graph
      */
+	
 	public static LinkedList<Integer> FruitInfo(game_service game, graph p) {
 		
   
@@ -196,6 +161,7 @@ public class fruits  {
 				 if (MyGameGUI.km != null) {
 			         if (fruit_tmp.getType() == 1) {
 			        	 MyGameGUI.km.addPlaceMark("fruit-apple", fruit_tmp.getPos().toString());
+
 			         } else {
 			        	 MyGameGUI.km.addPlaceMark("fruit-banana", fruit_tmp.getPos().toString());
 			         }
@@ -233,7 +199,35 @@ public class fruits  {
 	
 	
 	
+	 /**
+     *  Constructor init fruit attributes from a JSON string input. Separates the different values
+     * from jsonString and sets them to their respective values. Pos The function separates the x and y values and
+     * creates the 3D point for pos.
+     * @param jsonString
+     */
+	@Override
+	public void init(String jsonString) {
 
+		try {
+			JSONObject fruit = new JSONObject(jsonString);
+			JSONObject ttt = fruit.getJSONObject("Fruit");
+			double value = ttt.getDouble("value");
+			int type = ttt.getInt("type");
+			String position = ttt.getString("pos");
+			String[] arrOfStr = position.split(",", 0);
+			double x = Double.parseDouble(arrOfStr[0]);
+			double y = Double.parseDouble(arrOfStr[1]);
+			Point3D pos = new Point3D(x, y);
+			this.value = value;
+			this.pos = pos;
+			this.type = type;
+
+		}
+
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
 	
 	

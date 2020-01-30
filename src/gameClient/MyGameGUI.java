@@ -1,18 +1,18 @@
 package gameClient;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.awt.BasicStroke;
-import java.awt.Color;
-
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
@@ -20,6 +20,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import Server.Game_Server;
@@ -32,13 +33,15 @@ import elements.Game_Algo;
 import elements.fruits;
 import elements.robots;
 import utils.Point3D;
-
 /**
  * This class create gui for the game
  * extends JFrame
  */
 public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,Runnable{
-	
+
+
+
+
 	private int choose=0;
 	private int type=-1;
 	private int on=0;
@@ -51,8 +54,12 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 	private int counter;
 	private int isFollow;
 	static Thread roboThread=new Thread();
-	public static KML_Logger km=null;
+	public static KML_Logger km;
 	private int inputfrom;
+	private int count;
+	public static int dt;
+	private int ID;
+	private String gr;
 
 
 	JButton Buttons;
@@ -67,26 +74,26 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 
 	Point3D p;
 	graph graph2;
-	graph graph1;
+	graph gg;
 	game_service game;
-	fruits myFruit = new fruits();
+	fruits myFrut = new fruits();
 	robots myRobot = new robots();
 	Game_Algo myAlgo = new Game_Algo();
 
-	 /**
-     * Initialize new MyGameGUI() 
-     * @param g - represnt graph
-     */
+	/**
+	 * Initialize new MyGameGUI() 
+	 * @param g - represnt graph
+	 */
 	public MyGameGUI(graph g) {
-    
+
 	}
-     /**
-     * This method make the first init for the gui,this method performs all the properties of the game. 
-     * in this function selects the level in which the player wants to play, 
-     * which game mode he wants to play (auto / manual), the robots selection and more.
-     */
+	/**
+	 * This method make the first init for the gui,this method performs all the properties of the game. 
+	 * in this function selects the level in which the player wants to play, 
+	 * which game mode he wants to play (auto / manual), the robots selection and more.
+	 */
 	public MyGameGUI()
-    
+
 	{
 		try {
 
@@ -97,6 +104,8 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 			this.setTitle("The Robots Game");
 
 			if(choose==0) {
+				ID=Integer.parseInt(JOptionPane.showInputDialog(null,"Enter your ID"));
+
 				String a[]= {"manual","outomatic"};
 				type=JOptionPane.showOptionDialog(null, "choose your type of game", "Click a button", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, a, null);	
 				String input = JOptionPane.showInputDialog(null,"Enter level");	
@@ -117,10 +126,12 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 					flag=false;
 
 				}
+
+				Game_Server.login(ID);
+
 				this.game = Game_Server.getServer(inputfrom); // you have [0,23] games
 				km=new KML_Logger(inputfrom);
-
-				String gr = game.getGraph(); //getGraph returns String of edges and nodes
+				gr = game.getGraph(); //getGraph returns String of edges and nodes
 				DGraph gg = new DGraph();
 				gg.init(gr);
 				this.graph2=gg;
@@ -178,14 +189,37 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 			try {
 				on=1;
 				int ind=0;
-				long dt=30;
+				dt=160;
+				//level 0=110(287 moves), 1=110(574), 3=110( 574) 
+				int jj = 0;
 				if(type==1) {
 					while(this.game.isRunning()) {
-						myAlgo.moveRobots(this.game, this.graph2);
+						/*			count++;
+						 if(count%20==0) {
+							dt=125;
+						}
+						 else if(count%8==0) {
+							dt=95;
+						}
+						 */				
 
+
+
+						myAlgo.moveRobots(this.game, this.graph2);
 						if(ind%2==0) {repaint();}
-						TimeUnit.MILLISECONDS.sleep(dt);
+						//	TimeUnit.MILLISECONDS.sleep(dt);
 						ind++;
+
+						try {
+							List<String> stat = game.getRobots();
+							for(int i=0;i<stat.size();i++) {
+								System.out.println(jj+") "+stat.get(i));
+							}
+							jj++;
+						}
+						catch(Exception e) {
+							e.printStackTrace();
+						}
 					}
 				}
 				if(type==0) {
@@ -195,21 +229,34 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 						if(ind%2==0) {repaint(); game.move();}
 						TimeUnit.MILLISECONDS.sleep(dt);
 						ind++;
+
 					}
-
-
 				}
 
-				km.kmlEnd();
+				km.KML_Stop();
+				if(type==1) {
+
+					game.sendKML(km.toString()); 
+				}
 				counter=0;
 				String info = this.game.toString();			
 				JSONObject	line = new JSONObject(info);
+
 
 				JSONObject	ttt = line.getJSONObject("GameServer");
 				int rs = ttt.getInt("grade");
 				JOptionPane.showMessageDialog(null, "Game Over: your grade is "+ rs);
 				String results = game.toString();
 				System.out.println("Game Over: "+results);
+				
+
+				JOptionPane.showMessageDialog(null, "Loading HighScore and Placement plesae wait ");
+				DB_Work db=new DB_Work();
+				JOptionPane.showMessageDialog(null,db.printLog(ID));
+				if(DB_Work.ToughLevels(inputfrom)){
+					JOptionPane.showMessageDialog(null,db.ToughStages(ID));
+				}
+		
 				System.exit(0);
 
 			}catch(Exception ex) {}
@@ -226,24 +273,24 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 
 	}
 
-     /**
-     * This method draws the graph.
-     * @param g - represent graph.
-     */
+	/**
+	 * This method draws the graph.
+	 * @param g - represent graph.
+	 */
 	@Override
 	public void paint (Graphics g)
 	{
-     
+
 		dbImage=createImage(1300,700 );
 		dbg = dbImage.getGraphics();
 		paintComponents(dbg);
 		g.drawImage(dbImage, 0, 0, this);
 	}
 
-     /**
-     * This method draws the whole game using the previous function and the fruits and robots using their coordinates.
-     * @param g - represent graph.
-     */
+	/**
+	 * This method draws the whole game using the previous function and the fruits and robots using their coordinates.
+	 * @param g - represent graph.
+	 */
 	@Override
 	public void paintComponents(Graphics g)
 	{
@@ -259,7 +306,7 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 					banana_image= ImageIO.read(new File("data/banana.jpg"));
 
 					//LinkedList<Integer> a= fruit(game, graph2,"Fruit");
-					LinkedList<Integer> a= myFruit.FruitInfo(game, graph2);
+					LinkedList<Integer> a= myFrut.FruitInfo(game, graph2);
 					for(int i=0 ; i<a.size()-3; i=i+4) {
 
 						if(a.get(i+2)==-1) {
@@ -340,8 +387,25 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 			}
 			//end of robots
 			if(graph2!=null ) {
+
+				JSONObject graph = new JSONObject(gr);
+				JSONArray nodes = graph.getJSONArray("Nodes");
+				// JSONArray edges = graph.getJSONArray("Edges");
+				//kml nodes rpacamarks
+				for (int i = 0; i < nodes.length(); ++i) {//find min x&y foe the scale func
+					String pos = nodes.getJSONObject(i).getString("pos");
+					MyGameGUI.km.addPlaceMark("node", pos);
+
+				}
+
+
+
+
+
 				for (node_data p : graph2.getV() ) 
 				{
+
+
 					g.setColor(Color.BLUE);
 					Point3D srcPoint = p.getLocation();
 					g.fillOval((int)srcPoint.x()-7, (int)srcPoint.y()-7, 12, 12);
@@ -351,7 +415,8 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 
 						for(edge_data e: graph2.getE(p.getKey())) {
 
-							g.setColor(Color.magenta);
+
+							g.setColor(Color.red);
 							if(e.getInfo()=="do" ) {
 								e.setInfo("");
 								g.setColor(Color.black);}
@@ -396,15 +461,15 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 		// TODO Auto-generated method stub
 		return;
 	}
-     /**
-     * this method is when the mode is manualed.The player clicks on a particular robot to move it
-     * in the game in manual mode and the function takes the id of this particular robot.
-     * @param e - represent MouseEvent.
-     */
+	/**
+	 * this method is when the mode is manualed.The player clicks on a particular robot to move it
+	 * in the game in manual mode and the function takes the id of this particular robot.
+	 * @param e - represent MouseEvent.
+	 */
 	@Override
 	public void mousePressed(MouseEvent e) {
-	
-		
+
+
 		// TODO Auto-generated method stub
 		int x = e.getX();
 		int y = e.getY();
@@ -419,16 +484,16 @@ public class MyGameGUI extends JFrame implements ActionListener, MouseListener ,
 			}	
 		}
 	}
-     /**
-     * this method is when the mode is manualed. When the player unleashes the mouse,
-     * it takes the x and y coordinates and moves the robot
-     * that we took its id in the previous function to his next node according to the coordinates.
-     * @param e - represent MouseEvent.
-     */
+	/**
+	 * this method is when the mode is manualed. When the player unleashes the mouse,
+	 * it takes the x and y coordinates and moves the robot
+	 * that we took its id in the previous function to his next node according to the coordinates.
+	 * @param e - represent MouseEvent.
+	 */
 	@Override
 	public void mouseReleased(MouseEvent e) {
 
-		
+
 		// TODO Auto-generated method stub
 		if(type==0) {
 			draw=true;

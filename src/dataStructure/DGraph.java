@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import dataStructure.edge_data;
 import dataStructure.graph;
 import dataStructure.node_data;
+import gameClient.MyGameGUI;
 import utils.Point3D;
 
 public class DGraph implements graph{
@@ -25,33 +26,81 @@ public class DGraph implements graph{
 		numberOfEdges = 0;
 	}
 	
-	public void init(String g) {
+	public void init(String g) {	
 		try {
-			JSONObject line = new JSONObject(g);
-			JSONArray nodesArr = line.getJSONArray("Nodes");
-			JSONArray edgesArr = line.getJSONArray("Edges");
-			
-			for (int i = 0; i < nodesArr.length(); i++) { 
-				int id = nodesArr.getJSONObject(i).getInt("id");
-				
-				String pos = nodesArr.getJSONObject(i).getString("pos"); //the vertex's position
+			new DGraph();
+			double x=0;
+			double y=0;
+			double xmin=Integer.MAX_VALUE;
+			double ymin= Integer.MAX_VALUE;
+			double xmax=Integer.MIN_VALUE;
+			double ymax= Integer.MIN_VALUE;
+
+			JSONObject graph = new JSONObject(g);
+			JSONArray nodesArr = graph.getJSONArray("Nodes");
+			JSONArray edgesArr = graph.getJSONArray("Edges");
+
+			for (int i = 0; i < nodesArr.length(); ++i) {//find min x&y foe the scale func
+				String pos = nodesArr.getJSONObject(i).getString("pos");
+				try {
+					MyGameGUI.km.addPlaceMark("node", pos);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				String[] location = pos.split(",");
-				double x = Double.parseDouble(location[0]);
-				double y = Double.parseDouble(location[1]);
-				double z = Double.parseDouble(location[2]);
-				utils.Point3D p = new Point3D(x,y,z);
+				x=Double.parseDouble(location[0]);
+				if(x<xmin) {
+					xmin=x;
+				}
+				if(x>xmax) {
+					xmax=x;
+				}
+
+				y=Double.parseDouble(location[1]);
+				if(y<ymin) {
+					ymin=y;
+				}		
+				if(y>ymax) {
+					ymax=y;
+				}
+			}
+
+			for (int i = 0; i < nodesArr.length(); ++i) {
+				int id = nodesArr.getJSONObject(i).getInt("id");
+				String pos = nodesArr.getJSONObject(i).getString("pos");
+				String[] str = pos.split(",");
+				x=Double.parseDouble(str[0]);
+
+				int xp=(int)scale(x, xmin, xmax, 0+40, 1300-40);
+				y=Double.parseDouble(str[1]);
+				int yp=(int)scale(y, ymin, ymax, 0+80, 700-40);
 				
+				Point3D p = new Point3D(xp,720-yp);
+
 				addNode(new Vertex(id, p));
 			}
-			for (int i = 0; i < edgesArr.length(); i++) {
+			for (int i = 0; i < edgesArr.length(); ++i) {
 				int src = edgesArr.getJSONObject(i).getInt("src");
 				int dest = edgesArr.getJSONObject(i).getInt("dest");
 				double w = edgesArr.getJSONObject(i).getDouble("w");
+
+				String pos1 = nodesArr.getJSONObject(src).getString("pos");
+				String pos2 = nodesArr.getJSONObject(dest).getString("pos");
+				try {	
+					MyGameGUI.km.Place_Mark_edge(pos2, pos1);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				connect(src, dest, w);
 			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private double scale(double data, double r_min, double r_max, double t_min, double t_max) {
+		return ((data - r_min) / (r_max-r_min)) * (t_max - t_min) + t_min;
 	}
 
 	@Override

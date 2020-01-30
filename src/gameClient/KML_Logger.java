@@ -1,15 +1,14 @@
 package gameClient;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * this class responsible to create 24 kml files
  * the file can be loaded to google earth
  * and view the game course in a specific level
+ * the kml relevant only for auto game.
  */
 public class KML_Logger {
     /**
@@ -17,33 +16,39 @@ public class KML_Logger {
      * int level
      * StringBuffer str- the string will be written there.
      */
-
     private int level;
-    private StringBuilder info;
+    private StringBuffer str;
 
     /**
-     * Default constructor
-     */
-    
-    public  KML_Logger(){}
-    /**
-     * this method initialize the object and concat the standard start of a KML file.
-     * @param level - represent the stage
+     * simple constructor
+     * @param level
      */
     public KML_Logger(int level) {
         this.level = level;
-        info = new StringBuilder();
+        str = new StringBuffer();
+        KML_Start();
+    }
+    /**
+     * this function initialize the working platform to KML
+     */
+    public void KML_Start(){
+        str.append(
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +
+                        "<kml xmlns=\"http://earth.google.com/kml/2.2\">\r\n" +
+                        "  <Document>\r\n" +
+                        "    <name>" + "Game stage :"+level + "</name>" +"\r\n"
+        );
         KML_node();
     }
-
     /**
      * this function initialize the node icon to KML
      */
-    private void KML_node(){
-    	info.append(" <Style id=\"node\">\r\n" +
+   
+    public void KML_node(){
+        str.append(" <Style id=\"node\">\r\n" +
                 "      <IconStyle>\r\n" +
                 "        <Icon>\r\n" +
-                "          <href>http://maps.google.com/mapfiles/kml/pal3/icon35.png</href>\r\n" +
+                "          <href>http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png</href>\r\n" +
                 "        </Icon>\r\n" +
                 "        <hotSpot x=\"32\" y=\"1\" xunits=\"pixels\" yunits=\"pixels\"/>\r\n" +
                 "      </IconStyle>\r\n" +
@@ -51,23 +56,24 @@ public class KML_Logger {
         );
         KML_Fruit();
     }
+
     /**
      * this function initialize the Fruits icon to KML (Type 1 and -1)
      */
     private void KML_Fruit(){
-    	info.append(
-                " <Style id=\"fruit_-1\">\r\n" +
+        str.append(
+                " <Style id=\"fruit-banana\">\r\n" +
                         "      <IconStyle>\r\n" +
                         "        <Icon>\r\n" +
-                        "          <href>http://maps.google.com/mapfiles/kml/paddle/purple-stars.png</href>\r\n" +
+                        "          <href>http://maps.google.com/mapfiles/kml/shapes/motorcycling.png</href>\r\n" +
                         "        </Icon>\r\n" +
                         "        <hotSpot x=\"32\" y=\"1\" xunits=\"pixels\" yunits=\"pixels\"/>\r\n" +
                         "      </IconStyle>\r\n" +
                         "    </Style>" +
-                        " <Style id=\"fruit_1\">\r\n" +
+                        " <Style id=\"fruit-apple\">\r\n" +
                         "      <IconStyle>\r\n" +
                         "        <Icon>\r\n" +
-                        "          <href>http://maps.google.com/mapfiles/kml/paddle/red-stars.png</href>\r\n" +
+                        "          <href>http://maps.google.com/mapfiles/kml/shapes/truck.png</href>\r\n" +
                         "        </Icon>\r\n" +
                         "        <hotSpot x=\"32\" y=\"1\" xunits=\"pixels\" yunits=\"pixels\"/>\r\n" +
                         "      </IconStyle>\r\n" +
@@ -79,8 +85,8 @@ public class KML_Logger {
      * this function initialize the Robots icon to KML
      */
     private void KML_Robot(){
-    	info.append(
-                " <Style id=\"robot\">\r\n" +
+        str.append(
+                " <Style id=\"robok\">\r\n" +
                         "      <IconStyle>\r\n" +
                         "        <Icon>\r\n" +
                         "          <href>http://maps.google.com/mapfiles/kml/shapes/motorcycling.png></href>\r\n" +
@@ -92,18 +98,19 @@ public class KML_Logger {
     }
 
     /**
-     * this methos adds placemark to the KML file.
-     * Each game element has a placemark id.
-     * @param id 
-     * @param location 
+     * this function is used in "paint"
+     * after painting each element
+     * the function enters the kml the location of each element
+     * @param id
+     * @param location
      */
     public void addPlaceMark(String id, String location)
     {
-        LocalDateTime time = LocalDateTime.now();
-        info.append(
+        LocalDateTime Present_time = LocalDateTime.now();
+        str.append(
                 "    <Placemark>\r\n" +
                         "      <TimeStamp>\r\n" +
-                        "        <when>" + time+ "</when>\r\n" +
+                        "        <when>" + Present_time+ "</when>\r\n" +
                         "      </TimeStamp>\r\n" +
                         "      <styleUrl>#" + id + "</styleUrl>\r\n" +
                         "      <Point>\r\n" +
@@ -111,32 +118,54 @@ public class KML_Logger {
                         "      </Point>\r\n" +
                         "    </Placemark>\r\n"
         );
+        
+    }
+    public void Place_Mark_edge(String locationfrom,String locationto)
+    {
+    	
+        str.append(
+                "        <Placemark>\n" +
+                        "      <LineString>\n" +
+                        "        <extrude>1</extrude>\n" +
+                        "        <tessellate>1</tessellate>\n" +
+                        "        <coordinates>"+locationfrom+" "+locationto+"</coordinates>\n" +
+                        "      </LineString>\n" +
+                        "    </Placemark> "
+        );
     }
 
-    
-    
     /**
-     * Concat the closing string for the KML file.
-     * Creates a kml file name=stage.kml and save it to the data folder in this project.
+     * mark the kml the end of the script
      */
-    public void kmlEnd()
+    public  void KML_Stop()
     {
-        info.append("  \r\n</Document>\r\n" +
-                "</kml>"
-        );
-        kmlSave();
+        str.append("  \r\n</Document>\r\n" +
+                "</kml>");
+        SaveFile();
     }
-    public void kmlSave() {
+
+    /**
+     * save the kml string to a file
+     */
+    private void SaveFile(){
         try
         {
-            File f=new File("data/"+this.level+".kml");
-            PrintWriter pw=new PrintWriter(f);
-            pw.write(info.toString());
+            File file=new File("data/"+level+".kml");
+            PrintWriter pw=new PrintWriter(file);
+            pw.write(str.toString());
             pw.close();
-
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
+    
+    
+    @Override
+    public String toString(){
+        return str.toString();
     }
+    
+    
+    
+
+}

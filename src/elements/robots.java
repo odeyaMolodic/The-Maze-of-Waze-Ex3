@@ -1,23 +1,20 @@
 package elements;
 
-import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import Server.game_service;
-import dataStructure.edge_data;
 import dataStructure.graph;
-import elements.*;
 import gameClient.MyGameGUI;
 import utils.Point3D;
 
 
 
-public class robots{
+
+public class robots implements robot_data{
 	
 	game_service game;
 	graph praph;
@@ -94,6 +91,7 @@ public class robots{
      * @ param game - represent game
      * @ param p - represent graph
      */
+	@Override
 	public LinkedList<Integer> robotsInfo(game_service game, graph p) {
 
 		
@@ -140,7 +138,7 @@ public class robots{
 
 				 robots robot_tmp = new robots(robot);
 		            if (MyGameGUI.km != null) {
-		            	MyGameGUI.km.addPlaceMark("dfr", robot_tmp.getLocation().toString());
+		            	MyGameGUI.km.addPlaceMark("robo", robot_tmp.getLocation().toString());
 		            }
 		            
 				JSONObject ff = new JSONObject(robot);
@@ -171,6 +169,7 @@ public class robots{
 	}
 
 
+	@Override
 	public void locate(double xmin, double ymin, double ymax, double xmax, LinkedList<Integer> a, game_service game) {
 		for( String fruit: game.getRobots())
 		{
@@ -201,6 +200,7 @@ public class robots{
 
 	}
 
+	@Override
 	public int getID() {
 		return this.id;
 	}
@@ -217,23 +217,23 @@ public class robots{
 	public void setPos(Point3D pos) {
 		this.pos=pos;
 	}
-
+	@Override
 	public int getDest() {
 		return dest;
 	}
-
+	@Override
 	public void setDest(int dest) {
 		this.dest=dest;
 	}
-
+	@Override
 	public int getSrc() {
 		return this.src;
 	}
-
+	@Override
 	public void setSrc(int src) {
 		this.src=src;
 	}
-
+	@Override
 	public double getValue() {
 		return this.value;
 	}
@@ -241,11 +241,11 @@ public class robots{
 	public void setValue(double value) {
 		this.value=value;
 	}
-
+	@Override
 	public double getSpeed() {
 		return this.speed;
 	}
-
+	@Override
 	public void setSpeed(double speed) {
 		this.speed=speed;
 	}
